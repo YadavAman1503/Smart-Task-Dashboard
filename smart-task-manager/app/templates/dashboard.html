@@ -1,0 +1,1279 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Smart Task Dashboard</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
+
+<style>
+
+body{
+    margin:0;
+    background:#0f172a;
+    color:white;
+    font-family:Arial;
+    overflow-x:hidden;
+}
+
+.sidebar{
+    width:250px;
+    height:100vh;
+    background:#020617;
+    position:fixed;
+    padding:20px;
+}
+
+.logo{
+    font-size:32px;
+    font-weight:bold;
+    margin-bottom:40px;
+}
+
+.menu-btn{
+    width:100%;
+    padding:15px;
+    margin-top:15px;
+    border:none;
+    border-radius:12px;
+    background:#1e293b;
+    color:white;
+    font-size:16px;
+    text-align:left;
+    transition:0.3s;
+}
+
+.menu-btn:hover{
+    background:#38bdf8;
+    color:black;
+}
+
+.main{
+    margin-left:270px;
+    padding:30px;
+}
+
+.section{
+    display:none;
+}
+
+.active{
+    display:block;
+}
+
+.card-box{
+    background:#1e293b;
+    padding:25px;
+    border-radius:20px;
+    box-shadow:0px 0px 20px rgba(0,0,0,0.5);
+}
+
+.chart-box{
+    background:#1e293b;
+    border-radius:20px;
+    padding:20px;
+    box-shadow:0px 0px 20px rgba(0,0,0,0.5);
+}
+
+.graph{
+    width:100%;
+    height:500px;
+}
+
+.task{
+    background:#334155;
+    padding:15px;
+    border-radius:15px;
+    margin-top:15px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.analytics-card{
+    background:#334155;
+    padding:20px;
+    border-radius:15px;
+    text-align:center;
+}
+
+.analytics-card h1{
+    color:#38bdf8;
+    font-size:42px;
+}
+
+.settings-item{
+    background:#334155;
+    padding:20px;
+    border-radius:15px;
+    margin-top:15px;
+}
+
+#notification{
+    position:fixed;
+    top:20px;
+    right:20px;
+    background:#22c55e;
+    padding:15px;
+    border-radius:12px;
+    display:none;
+    z-index:999;
+    font-weight:bold;
+}
+
+input,
+select{
+    background:#334155 !important;
+    border:none !important;
+    color:white !important;
+}
+
+.light-mode{
+    background:white;
+    color:black;
+}
+
+.light-mode .sidebar{
+    background:#dbeafe;
+}
+
+.light-mode .card-box,
+.light-mode .chart-box{
+    background:#e2e8f0;
+    color:black;
+}
+
+.light-mode .task{
+    background:#cbd5e1;
+    color:black;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div id="notification"></div>
+
+<div class="sidebar">
+
+<div class="logo">
+ Smart Tasks
+</div>
+
+<button class="menu-btn" onclick="showSection('dashboard')">
+📊 Dashboard
+</button>
+
+<button class="menu-btn" onclick="showSection('analytics')">
+📈 Analytics
+</button>
+
+<button class="menu-btn" onclick="showSection('tasks')">
+✅ Tasks
+</button>
+
+<button class="menu-btn" onclick="showSection('settings')">
+⚙️ Settings
+</button>
+
+</div>
+
+<div class="main">
+
+<div id="dashboard" class="section active">
+
+<h1>Smart Task Dashboard</h1>
+
+<div class="row mt-4">
+
+<div class="col-lg-4 mb-4">
+<div class="card-box">
+<h4>Total Tasks</h4>
+<h1 id="totalTasks">0</h1>
+</div>
+</div>
+
+<div class="col-lg-4 mb-4">
+<div class="card-box">
+<h4>Completed</h4>
+<h1 id="completedCount">0</h1>
+</div>
+</div>
+
+<div class="col-lg-4 mb-4">
+<div class="card-box">
+<h4>Pending</h4>
+<h1 id="pendingCount">0</h1>
+</div>
+</div>
+
+</div>
+
+<div class="row">
+
+<div class="col-lg-4 mb-4">
+
+<div class="chart-box">
+
+<h3> Pie Visualization</h3>
+
+<div id="dashboardPie" class="graph"></div>
+
+</div>
+
+</div>
+
+<div class="col-lg-4 mb-4">
+
+<div class="chart-box">
+
+<h3>📊 Bar Analytics</h3>
+
+<div id="dashboardBar" class="graph"></div>
+
+</div>
+
+</div>
+
+<div class="col-lg-4 mb-4">
+
+<div class="chart-box">
+
+<h3>📈 3D Productivity Graph</h3>
+
+<div id="dashboardLine" class="graph"></div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div id="analytics" class="section">
+
+<h1>📈 Advanced Analytics</h1>
+
+<div class="row mt-4">
+
+<div class="col-lg-3 mb-4">
+<div class="analytics-card">
+<h5>Productivity</h5>
+<h1 id="productivityScore">83%</h1>
+</div>
+</div>
+
+<div class="col-lg-3 mb-4">
+<div class="analytics-card">
+<h5>Performance</h5>
+<h1 id="performanceScore">83%</h1>
+</div>
+</div>
+
+<div class="col-lg-3 mb-4">
+<div class="analytics-card">
+<h5>Task Speed</h5>
+<h1 id="speedScore">83%</h1>
+</div>
+</div>
+
+<div class="col-lg-3 mb-4">
+<div class="analytics-card">
+<h5>AI Score</h5>
+<h1 id="aiScore">83%</h1>
+</div>
+</div>
+
+</div>
+
+<div class="row mt-4">
+
+<div class="col-lg-6 mb-4">
+
+<div class="chart-box">
+
+<h3> Pie Analytics</h3>
+
+<div id="analyticsPie"
+style="width:100%;height:500px;"></div>
+
+</div>
+
+</div>
+
+<div class="col-lg-6 mb-4">
+
+<div class="chart-box">
+
+<h3>📊 Performance Analytics</h3>
+
+<div id="analyticsBar"
+style="width:100%;height:500px;"></div>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="row mt-4">
+
+<div class="col-lg-12 mb-4">
+
+<div class="chart-box">
+
+<h3>📈 AI Productivity Analysis</h3>
+
+<div id="analyticsLine"
+style="width:100%;height:600px;"></div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+function updateAnalyticsCharts(completed,pending,total){
+
+Plotly.newPlot("analyticsPie",[{
+
+labels:[
+"Completed",
+"Pending"
+],
+
+values:[
+completed,
+pending
+],
+
+type:"pie",
+
+hole:0.45,
+
+textinfo:"label+percent",
+
+marker:{
+colors:[
+"#22c55e",
+"#ef4444"
+]
+}
+
+}],{
+
+title:"Task Completion Analysis",
+
+paper_bgcolor:"#1e293b",
+
+plot_bgcolor:"#1e293b",
+
+font:{
+color:"white",
+size:18
+},
+
+height:500
+
+})
+
+Plotly.newPlot("analyticsBar",[{
+
+type:"bar",
+
+x:[
+"Total",
+"Completed",
+"Pending"
+],
+
+y:[
+total,
+completed,
+pending
+],
+
+text:[
+total,
+completed,
+pending
+],
+
+textposition:"auto",
+
+marker:{
+color:[
+"#38bdf8",
+"#22c55e",
+"#ef4444"
+]
+}
+
+}],{
+
+title:"Advanced Performance Analytics",
+
+paper_bgcolor:"#1e293b",
+
+plot_bgcolor:"#1e293b",
+
+font:{
+color:"white",
+size:18
+},
+
+xaxis:{
+title:"Analytics"
+},
+
+yaxis:{
+title:"Values"
+},
+
+height:500
+
+})
+
+Plotly.newPlot("analyticsLine",[{
+
+type:"scatter3d",
+
+mode:"lines+markers",
+
+x:[1,2,3,4,5,6,7],
+
+y:[
+10,
+20,
+30,
+40,
+50,
+60,
+70
+],
+
+z:[
+5,
+10,
+15,
+20,
+25,
+30,
+35
+],
+
+line:{
+color:"#38bdf8",
+width:10
+},
+
+marker:{
+size:8,
+color:[
+10,
+20,
+30,
+40,
+50,
+60,
+70
+],
+colorscale:"Turbo"
+}
+
+}],{
+
+title:"AI Productivity Analysis",
+
+paper_bgcolor:"#1e293b",
+
+plot_bgcolor:"#1e293b",
+
+font:{
+color:"white"
+},
+
+scene:{
+
+xaxis:{
+title:"Timeline"
+},
+
+yaxis:{
+title:"Performance"
+},
+
+zaxis:{
+title:"AI Growth"
+}
+
+},
+
+height:600
+
+})
+
+}
+
+</script>
+
+<div id="tasks" class="section">
+
+<h1>✅ Smart Task Manager</h1>
+
+<div class="card-box">
+
+<div class="row">
+
+<div class="col-lg-4">
+
+<input type="text"
+id="taskInput"
+class="form-control"
+placeholder="Task Title">
+
+</div>
+
+<div class="col-lg-4">
+
+<input type="text"
+id="taskDescription"
+class="form-control"
+placeholder="Task Description">
+
+</div>
+
+<div class="col-lg-2">
+
+<select id="taskPriority"
+class="form-control">
+
+<option>High</option>
+<option>Medium</option>
+<option>Low</option>
+
+</select>
+
+</div>
+
+<div class="col-lg-2">
+
+<button class="btn btn-info w-100"
+onclick="addTask()">
+
+Add Task
+
+</button>
+
+</div>
+
+</div>
+
+</div>
+
+<div class="row mt-4">
+
+<div class="col-lg-6">
+
+<div class="card-box">
+
+<h3>⏳ Pending Tasks</h3>
+
+<div id="pendingTasks"></div>
+
+</div>
+
+</div>
+
+<div class="col-lg-6">
+
+<div class="card-box">
+
+<h3>🏆 Completed Tasks</h3>
+
+<div id="completedTasks"></div>
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<div id="settings" class="section">
+
+<h1>⚙️ Settings</h1>
+
+<div class="card-box">
+
+<div class="settings-item">
+
+🌙 Dark / Light Mode
+
+<button class="btn btn-warning btn-sm float-end"
+onclick="toggleTheme()">
+
+Toggle
+
+</button>
+
+</div>
+
+<div class="settings-item">
+
+🔔 Notifications
+
+<button class="btn btn-success btn-sm float-end"
+onclick="toggleNotifications()"
+id="notifyBtn">
+
+Enabled
+
+</button>
+
+</div>
+
+<div class="settings-item">
+
+👤 User Profile
+
+<br><br>
+
+Name: Aman Yadav
+<br>
+Role: Python Developer
+<br>
+Database: PostgreSQL Connected
+
+</div>
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+const socket = io()
+
+let notificationsEnabled = true
+
+socket.on("task_update", function(data){
+
+    showNotification(data.message)
+
+    loadTasks()
+})
+
+if(Notification.permission !== "granted"){
+
+    Notification.requestPermission()
+}
+
+function showSection(id){
+
+    document.querySelectorAll(".section")
+    .forEach(sec=>{
+
+        sec.classList.remove("active")
+    })
+
+    document.getElementById(id)
+    .classList.add("active")
+}
+
+function showNotification(message){
+
+    if(!notificationsEnabled){
+
+        return
+    }
+
+    let box = document.getElementById("notification")
+
+    box.innerText = message
+
+    box.style.display = "block"
+
+    if(Notification.permission === "granted"){
+
+        new Notification(message)
+    }
+
+    setTimeout(()=>{
+
+        box.style.display = "none"
+
+    },3000)
+}
+
+function toggleTheme(){
+
+    document.body.classList.toggle("light-mode")
+}
+
+function toggleNotifications(){
+
+    notificationsEnabled = !notificationsEnabled
+
+    let btn = document.getElementById("notifyBtn")
+
+    if(notificationsEnabled){
+
+        btn.innerText = "Enabled"
+
+    }else{
+
+        btn.innerText = "Disabled"
+    }
+}
+
+async function addTask(){
+
+    let title = document.getElementById("taskInput").value
+
+    let description = document.getElementById("taskDescription").value
+
+    let priority = document.getElementById("taskPriority").value
+
+    if(title===""){
+
+        alert("Enter Task")
+        return
+    }
+
+    await fetch("/api/add-task",{
+
+        method:"POST",
+
+        headers:{
+            "Content-Type":"application/json"
+        },
+
+        body:JSON.stringify({
+
+            title:title,
+
+            description:description,
+
+            priority:priority
+        })
+    })
+
+    document.getElementById("taskInput").value = ""
+
+    document.getElementById("taskDescription").value = ""
+
+    loadTasks()
+}
+
+async function loadTasks(){
+
+    const response = await fetch("/api/tasks")
+
+    const tasks = await response.json()
+
+    const pendingContainer = document.getElementById("pendingTasks")
+
+    const completedContainer = document.getElementById("completedTasks")
+
+    pendingContainer.innerHTML = ""
+
+    completedContainer.innerHTML = ""
+
+    let completed = 0
+    let pending = 0
+
+    tasks.forEach(task=>{
+
+        let div = document.createElement("div")
+
+        div.className = "task"
+
+        div.innerHTML = `
+
+        <div>
+
+        <h5>${task.title}</h5>
+
+        <p>${task.description}</p>
+
+        <p>${task.priority}</p>
+
+        </div>
+
+        <div>
+
+        ${
+            task.status === "Pending"
+
+            ?
+
+            `<button class="btn btn-success btn-sm"
+            onclick="completeTask(${task.id})">
+
+            Complete
+
+            </button>`
+
+            :
+
+            ""
+        }
+
+        <button class="btn btn-danger btn-sm"
+        onclick="deleteTask(${task.id})">
+
+        Delete
+
+        </button>
+
+        </div>
+        `
+
+        if(task.status === "Completed"){
+
+            completed++
+
+            completedContainer.appendChild(div)
+
+        }else{
+
+            pending++
+
+            pendingContainer.appendChild(div)
+        }
+    })
+
+    updateDashboardCounts(completed,pending)
+}
+
+async function completeTask(id){
+
+    await fetch(`/api/complete-task/${id}`,{
+        method:"PUT"
+    })
+
+    loadTasks()
+}
+
+async function deleteTask(id){
+
+    await fetch(`/api/delete-task/${id}`,{
+        method:"DELETE"
+    })
+
+    loadTasks()
+}
+
+function updateDashboardCounts(completed,pending){
+
+    const total = completed + pending
+
+    document.getElementById("totalTasks").innerText = total
+
+    document.getElementById("completedCount").innerText = completed
+
+    document.getElementById("pendingCount").innerText = pending
+
+    let productivity = 0
+
+    if(total>0){
+
+        productivity = Math.round((completed/total)*100)
+    }
+
+    document.getElementById("productivityScore").innerText = productivity + "%"
+
+    document.getElementById("performanceScore").innerText = productivity + "%"
+
+    document.getElementById("speedScore").innerText = productivity + "%"
+
+    document.getElementById("aiScore").innerText = productivity + "%"
+
+    updatePieChart(completed,pending)
+
+    updateBarChart(completed,pending,total)
+
+    updateLineChart(completed,pending,total)
+
+    updateAnalyticsCharts(completed,pending,total)
+}
+
+function updatePieChart(completed,pending){
+
+    Plotly.newPlot("dashboardPie",[{
+
+        labels:[
+            "Completed",
+            "Pending"
+        ],
+
+        values:[
+            completed,
+            pending
+        ],
+
+        type:"pie",
+
+        hole:0.45,
+
+        textinfo:"label+percent",
+
+        marker:{
+            colors:[
+                "#22c55e",
+                "#ef4444"
+            ]
+        }
+
+    }],{
+
+        paper_bgcolor:"#1e293b",
+
+        font:{
+            color:"white",
+            size:18
+        },
+
+        height:500
+    })
+}
+
+function updateBarChart(completed,pending,total){
+
+    Plotly.newPlot("dashboardBar",[{
+
+        type:"bar",
+
+        x:[
+            "Total Tasks",
+            "Completed",
+            "Pending"
+        ],
+
+        y:[
+            total,
+            completed,
+            pending
+        ],
+
+        text:[
+            total,
+            completed,
+            pending
+        ],
+
+        textposition:"auto",
+
+        marker:{
+            color:[
+                "#38bdf8",
+                "#22c55e",
+                "#ef4444"
+            ]
+        }
+
+    }],{
+
+        title:"Task Performance Analytics",
+
+        paper_bgcolor:"#1e293b",
+
+        plot_bgcolor:"#1e293b",
+
+        font:{
+            color:"white",
+            size:18
+        },
+
+        xaxis:{
+            title:"Task Status"
+        },
+
+        yaxis:{
+            title:"Task Count"
+        },
+
+        height:500
+    })
+}
+
+function updateLineChart(completed,pending,total){
+
+    Plotly.newPlot("dashboardLine",[{
+
+        type:"scatter3d",
+
+        mode:"lines+markers",
+
+        x:[1,2,3,4,5,6,7],
+
+        y:[
+            total,
+            completed,
+            pending,
+            total+2,
+            completed+3,
+            pending+4,
+            total+5
+        ],
+
+        z:[
+            5,
+            10,
+            15,
+            20,
+            25,
+            30,
+            35
+        ],
+
+        marker:{
+            size:8,
+            color:[
+                10,
+                20,
+                30,
+                40,
+                50,
+                60,
+                70
+            ],
+            colorscale:"Turbo"
+        },
+
+        line:{
+            width:10,
+            color:"#00c6ff"
+        }
+
+    }],{
+
+        title:"Live Productivity Growth",
+
+        paper_bgcolor:"#1e293b",
+
+        plot_bgcolor:"#1e293b",
+
+        font:{
+            color:"white"
+        },
+
+        scene:{
+
+            xaxis:{
+                title:"Days"
+            },
+
+            yaxis:{
+                title:"Tasks"
+            },
+
+            zaxis:{
+                title:"Growth"
+            }
+        },
+
+        height:550
+    })
+}
+
+function updateAnalyticsCharts(completed,pending,total){
+
+    Plotly.newPlot("analyticsPie",[{
+
+        labels:[
+            "Completed",
+            "Pending"
+        ],
+
+        values:[
+            completed,
+            pending
+        ],
+
+        type:"pie",
+
+        hole:0.4,
+
+        textinfo:"label+percent",
+
+        marker:{
+            colors:[
+                "#22c55e",
+                "#ef4444"
+            ]
+        }
+
+    }],{
+
+        title:"Task Completion Analysis",
+
+        paper_bgcolor:"#1e293b",
+
+        plot_bgcolor:"#1e293b",
+
+        font:{
+            color:"white"
+        },
+
+        height:500
+    })
+
+    Plotly.newPlot("analyticsBar",[{
+
+        type:"bar",
+
+        x:[
+            "Total",
+            "Completed",
+            "Pending"
+        ],
+
+        y:[
+            total,
+            completed,
+            pending
+        ],
+
+        text:[
+            total,
+            completed,
+            pending
+        ],
+
+        textposition:"auto",
+
+        marker:{
+            color:[
+                "#38bdf8",
+                "#22c55e",
+                "#ef4444"
+            ]
+        }
+
+    }],{
+
+        title:"Advanced Performance Analytics",
+
+        paper_bgcolor:"#1e293b",
+
+        plot_bgcolor:"#1e293b",
+
+        font:{
+            color:"white"
+        },
+
+        xaxis:{
+            title:"Analytics"
+        },
+
+        yaxis:{
+            title:"Values"
+        },
+
+        height:500
+    })
+
+    Plotly.newPlot("analyticsLine",[{
+
+        type:"scatter3d",
+
+        mode:"lines+markers",
+
+        x:[1,2,3,4,5,6,7],
+
+        y:[
+            pending,
+            completed,
+            total,
+            completed+5,
+            total+10,
+            completed+15,
+            total+20
+        ],
+
+        z:[
+            10,
+            20,
+            30,
+            40,
+            50,
+            60,
+            70
+        ],
+
+        marker:{
+            size:10,
+            color:[
+                5,
+                10,
+                15,
+                20,
+                25,
+                30,
+                35
+            ],
+            colorscale:"Rainbow"
+        },
+
+        line:{
+            width:10,
+            color:"#38bdf8"
+        }
+
+    }],{
+
+        title:"AI Productivity Analysis",
+
+        paper_bgcolor:"#1e293b",
+
+        plot_bgcolor:"#1e293b",
+
+        font:{
+            color:"white"
+        },
+
+        scene:{
+
+            xaxis:{
+                title:"Timeline"
+            },
+
+            yaxis:{
+                title:"Performance"
+            },
+
+            zaxis:{
+                title:"AI Growth"
+            }
+        },
+
+        height:550
+    })
+}
+
+loadTasks()
+
+</script>
+
+</body>
+</html>
